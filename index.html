@@ -96,6 +96,11 @@ mark.ph{background:#ffe9a8;color:#6b4e00}
 .bar i{display:block;height:100%;width:0;background:var(--green2);transition:width .2s}
 .st-ok{color:var(--green);font-weight:700}
 .st-err{color:var(--red);font-weight:700}
+.entry{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;font:inherit;color:var(--ink);cursor:pointer}
+.entry:hover{border-color:var(--green2);background:var(--green3)}
+.entry.on{border-color:var(--green);background:var(--green3);box-shadow:0 0 0 2px #cfe9d7}
+.entry small{display:block;color:var(--muted);font-size:.85rem}
+.entry .tag{float:right;margin-left:8px}
 .cards4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
 .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
 .stat b{display:block;font-size:1.6rem;color:var(--green)}
@@ -274,6 +279,7 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;padding:20px}
     <div class="script" id="scriptBox"></div>
     <div class="row-btns">
       <button class="btn alt" id="copyBtn" type="button">Copy the script</button>
+      <button class="btn ghost" id="dlBtn" type="button">Download the script</button>
       <span id="copyMsg" class="st-ok" style="display:none">Copied!</span>
     </div>
   </div>
@@ -310,11 +316,11 @@ footer{text-align:center;color:var(--muted);font-size:.85rem;padding:20px}
 <section class="page" id="page-upload">
   <div class="card">
     <h2>Upload Files</h2>
-    <p class="hint">You do not need to send all three. Share only what you have. Videos stay in your own Google Drive and you paste the link. Documents and photos are uploaded here. Please keep this page open until an upload is finished.</p>
+    <p class="hint">Choose your school, then tap the details you saved earlier. The suggested file names fill in for that entry. You do not need to send all three. Share only what you have, and come back anytime for the rest. Videos stay in your own Google Drive and you paste the link. Documents and photos are uploaded here. Please keep this page open until an upload is finished.</p>
     <div id="recBanner"></div>
   </div>
   <div class="boxes" id="boxes"></div>
-  <div class="card" style="margin-top:18px">
+  <div class="card" id="doneCard" style="margin-top:18px">
     <h2>Uploaded in this visit</h2>
     <div id="doneList" class="hint">Nothing uploaded yet.</div>
   </div>
@@ -392,6 +398,7 @@ function gs(fn){
 
 var state = {
   recordId: '', schools: [], mode: 'one', filter: 'all', status: null,
+  entries: [], sel: null, pickSchool: null, pick: '', upBy: '', pkMode: '',
   limits: {Video:300, Document:50, Photo:25},
   allowed: {
     Video:['mp4','mov','m4v','avi','mkv','webm','3gp'],
@@ -408,7 +415,7 @@ function showTab(name){
   });
   var bs = document.querySelectorAll('nav.tabs button');
   for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tab') === name);
-  if(name === 'upload'){ renderBanner(); ['video','docs','photos'].forEach(function(k){ applyNames(k); renderBox(k); }); }
+  if(name === 'upload'){ openUpload(); }
   if(name === 'status'){ loadStatus(); }
   window.scrollTo(0,0);
 }
@@ -450,7 +457,6 @@ function loadDraft(){
       for(var i=0;i<$('school').options.length;i++){ if($('school').options[i].value === d.school) ok = true; }
       if(ok) $('school').value = d.school;
     }
-    state.recordId = d.recordId || '';
     toggleOther();
   }catch(e){}
 }
@@ -499,12 +505,21 @@ $('saveBtn').addEventListener('click', async function(){
   var btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saving...';
   try{
     var r = await gs('saveDetails', {
-      recordId: state.recordId, school: v.school, enteredBy: v.by, position: v.pos, contact: v.contact,
+      recordId: '', school: v.school, enteredBy: v.by, position: v.pos, contact: v.contact,
       ppaType: v.ppaType, title: v.title, details: v.desc, stakeholders: v.stake, stakeType: v.stakeType,
       contribType: v.contrib, learners: v.learners, amount: v.amount, ppaDate: v.ppaDate
     });
-    state.recordId = r.recordId; saveDraft();
-    showMsg('saveMsg','ok','Saved. Record ID ' + r.recordId + '. Date and time inputted: ' + r.dateInputted + '. Entered by: ' + v.by + '. You can now open Upload Files.');
+    // Clear the boxes so the next school or person can enter their own details
+    resetForm();
+    var m = $('saveMsg');
+    m.className = 'msg ok';
+    m.innerHTML = 'Saved: <b>' + esc(v.title) + '</b> at ' + esc(v.school) + '. Record ID ' + esc(r.recordId) +
+      '. Date and time inputted: ' + esc(r.dateInputted) + '. Entered by: ' + esc(v.by) + '.<br>The form is now cleared for the next entry. ' +
+      'When your video link, documents, or photos are ready, open <b>Upload Files</b>, choose your school, and tap this entry.' +
+      '<div class="row-btns" style="margin-top:10px"><button class="btn alt" type="button" id="goUp">Upload files for this entry now</button></div>';
+    $('goUp').addEventListener('click', function(){
+      state.pickSchool = v.school; state.pick = r.recordId; showTab('upload');
+    });
   }catch(e){
     showMsg('saveMsg','err', e.message);
   }
@@ -512,14 +527,19 @@ $('saveBtn').addEventListener('click', async function(){
 });
 $('newBtn').addEventListener('click', function(){
   if(!confirm('Start a new entry? The form will be cleared.')) return;
-  state.recordId = '';
-  FIELDS.forEach(function(f){ if($(f).tagName === 'SELECT') $(f).selectedIndex = ($(f).id === 'ppaType' ? 1 : ($(f).id === 'contrib' ? 1 : 0)); else $(f).value = ''; });
-  $('school').selectedIndex = 0; toggleOther();
-  state.done = [];
-  boxes.video.rows = []; boxes.docs.rows = []; boxes.photos.rows = [];
-  saveDraft(); onChange();
+  resetForm();
   $('saveMsg').className = 'msg';
 });
+function resetForm(){
+  FIELDS.forEach(function(f){
+    var e = $(f);
+    if(e.tagName === 'SELECT') e.selectedIndex = (f === 'ppaType' || f === 'contrib') ? 1 : 0;
+    else e.value = '';
+  });
+  $('school').selectedIndex = 0; toggleOther();
+  try{ localStorage.removeItem('scp_draft'); }catch(e){}
+  renderScript();
+}
 
 /* ---------- Script ---------- */
 function fmtDate(s){
@@ -527,8 +547,8 @@ function fmtDate(s){
   var p = s.split('-'); if(p.length !== 3) return s;
   return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString('en-PH', {year:'numeric', month:'long', day:'numeric'});
 }
-function token(k){
-  var v = V();
+function token(k, src){
+  var v = src || V();
   function f(x, ph){ x = (x||'').trim(); return x ? {t:x, ok:true} : {t:'['+ph+']', ok:false}; }
   switch(k){
     case 'school': return f(v.school, 'Name of school');
@@ -537,11 +557,11 @@ function token(k){
     case 'title': return f(v.title, 'Name of the program, project, or activity');
     case 'desc': return f(v.desc, 'Tell in one or two sentences what happened and why it was done.');
     case 'stake': return f(v.stake, 'Name of stakeholder or stakeholders');
-    case 'stakeType': return {t:v.stakeType.toLowerCase(), ok:true};
+    case 'stakeType': return {t:(/^[A-Z]{2}/.test(v.stakeType) ? v.stakeType : v.stakeType.charAt(0).toLowerCase() + v.stakeType.slice(1)), ok:true};
     case 'contrib': return {t:v.contrib, ok:true};
-    case 'learners': return v.learners !== '' ? {t:fmtNum(v.learners), ok:true} : {t:'[number of learners]', ok:false};
-    case 'amount': return v.amount !== '' ? {t:fmtMoney(v.amount), ok:true} : {t:'[amount]', ok:false};
-    case 'date': return v.ppaDate ? {t:fmtDate(v.ppaDate), ok:true} : {t:'[date of the activity]', ok:false};
+    case 'learners': return (v.learners !== '' && Number(v.learners) > 0) ? {t:fmtNum(v.learners), ok:true} : {t:'[number of learners]', ok:false};
+    case 'amount': return (v.amount !== '' && Number(v.amount) > 0) ? {t:fmtMoney(v.amount), ok:true} : {t:'[amount]', ok:false};
+    case 'date': return v.ppaDate ? {t:fmtDate(isoDate(v.ppaDate) || v.ppaDate), ok:true} : {t:'[date of the activity]', ok:false};
     case 'h1': return f(v.host1 || v.by, 'Host name');
     case 'h2': return f(v.host2, 'Second host name');
   }
@@ -570,13 +590,20 @@ var TWO = [
   ['HOST 2', 'Your kindness helps our learners learn, grow, and dream.'],
   ['BOTH', 'Maraming salamat po!']
 ];
-function renderScript(){
-  var tpl = state.mode === 'one' ? ONE : TWO;
+function isoDate(s){
+  if(!s) return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  var d = new Date(s);
+  if(isNaN(d.getTime())) return '';
+  return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+}
+function buildScript(src, mode){
+  var tpl = mode === 'one' ? ONE : TWO;
   var html = '', plain = [];
   tpl.forEach(function(l){
     var who = l[0], text = l[1], p = '';
     var out = text.replace(/\{(\w+)\}/g, function(_, k){
-      var t = token(k);
+      var t = token(k, src);
       p += ''; return '\u0001' + (t.ok ? 'o' : 'p') + t.t + '\u0002';
     });
     var plainLine = out.replace(/\u0001[op]/g, '').replace(/\u0002/g, '');
@@ -590,8 +617,12 @@ function renderScript(){
       plain.push((who ? who + ': ' : '') + plainLine);
     }
   });
-  $('scriptBox').innerHTML = html;
-  state.plainScript = plain.join('\n\n');
+  return {html: html, plain: plain.join('\n\n')};
+}
+function renderScript(){
+  var s = buildScript(null, state.mode);
+  $('scriptBox').innerHTML = s.html;
+  state.plainScript = s.plain;
 }
 function setMode(m){
   state.mode = m;
@@ -602,16 +633,28 @@ function setMode(m){
 }
 $('mOne').addEventListener('click', function(){ setMode('one'); });
 $('mTwo').addEventListener('click', function(){ setMode('two'); });
-$('copyBtn').addEventListener('click', function(){
-  var done = function(){ var c = $('copyMsg'); c.style.display = 'inline'; setTimeout(function(){ c.style.display = 'none'; }, 2000); };
+function copyText(text, msgId){
+  var done = function(){ var c = $(msgId); if(!c) return; c.style.display = 'inline'; setTimeout(function(){ c.style.display = 'none'; }, 2000); };
   function fallback(){
-    var ta = document.createElement('textarea'); ta.value = state.plainScript; document.body.appendChild(ta);
+    var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
     ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
   }
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(state.plainScript).then(done, fallback);
+    navigator.clipboard.writeText(text).then(done, fallback);
   } else fallback();
-});
+}
+function downloadText(name, text){
+  var blob = new Blob(['﻿' + text.replace(/\n/g, '\r\n')], {type:'text/plain;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+}
+function scriptFile(school, mode){
+  return schoolShort(school) + '_VideoScript_' + (mode === 'one' ? 'OneHost' : 'TwoHosts') + '.txt';
+}
+$('copyBtn').addEventListener('click', function(){ copyText(state.plainScript, 'copyMsg'); });
+$('dlBtn').addEventListener('click', function(){ downloadText(scriptFile(V().school, state.mode), state.plainScript); });
 
 /* ---------- Suggested file names ---------- */
 function schoolShort(n){
@@ -636,8 +679,8 @@ function dateShort(d){
   return t.getFullYear() + ('0'+(t.getMonth()+1)).slice(-2) + ('0'+t.getDate()).slice(-2);
 }
 function nameBase(code){
-  var v = V();
-  return [schoolShort(v.school), code, stakeShort(v.stake), dateShort(v.ppaDate)].join('_');
+  var v = state.sel || V();
+  return [schoolShort(v.school), code, stakeShort(v.stake), dateShort(isoDate(v.ppaDate))].join('_');
 }
 
 /* ---------- Upload boxes ---------- */
@@ -687,14 +730,114 @@ function applyNames(key){
 }
 function cleanName(s){ return String(s).replace(/[^A-Za-z0-9_]/g, '').slice(0, 60); }
 
-function renderBanner(){
-  var v = V(), el = $('recBanner');
-  if(state.recordId){
-    el.innerHTML = '<div class="msg ok" style="display:block;margin:0">Uploading for: <b>' + esc(v.title || 'your entry') + '</b> at <b>' + esc(v.school) + '</b>. Record ID ' + esc(state.recordId) + '. Uploaded by: <b>' + esc(v.by) + '</b>.</div>';
-  } else {
-    el.innerHTML = '<div class="msg warn" style="display:block;margin:0">Please save the details on the Home page first, so your files are tied to your school and your name. <button class="btn alt" type="button" id="goHome" style="margin-left:8px;padding:6px 14px">Go to Home</button></div>';
-    var g = $('goHome'); if(g) g.addEventListener('click', function(){ showTab('home'); });
+/* ---------- Pick a saved entry, then upload ---------- */
+function upByVal(){
+  var e = $('upBy');
+  return (e ? e.value : (state.upBy || '')).trim();
+}
+function openUpload(){
+  if(state.pickSchool == null){
+    var sv = $('school').value;
+    state.pickSchool = (sv && sv !== '__other') ? sv : '';
   }
+  renderPicker();
+  loadEntries();
+}
+async function loadEntries(silent){
+  var sch = state.pickSchool;
+  if(!sch){ state.entries = []; state.entriesErr = ''; state.loadingEntries = false; renderPicker(); return; }
+  state.entriesErr = '';
+  if(!silent){ state.loadingEntries = true; renderPicker(); }
+  var list = [];
+  try{
+    list = await gs('getEntries', sch);
+  }catch(e){ state.entriesErr = e.message; }
+  if(sch !== state.pickSchool) return;
+  state.entries = (list || []).map(function(e){
+    e.pos = e.position; e.desc = e.details; e.contrib = e.contribType; e.host1 = ''; e.host2 = '';
+    return e;
+  });
+  state.loadingEntries = false;
+  if(state.pick){
+    var want = state.pick; state.pick = '';
+    var hit = state.entries.filter(function(x){ return x.id === want; })[0];
+    if(hit){ selectEntry(hit.id); return; }
+  }
+  if(state.sel){
+    var cur = state.entries.filter(function(x){ return x.id === state.sel.id; })[0];
+    if(cur) state.sel = cur;
+  }
+  renderPicker();
+}
+function selectEntry(id){
+  if(uploading) return;
+  var e = state.entries.filter(function(x){ return x.id === id; })[0];
+  if(!e) return;
+  if(state.recordId !== id){
+    boxes.video.rows = []; boxes.docs.rows = []; boxes.photos.rows = [];
+    state.upBy = e.by;
+  }
+  state.sel = e; state.recordId = id;
+  ['video','docs','photos'].forEach(function(k){ applyNames(k); renderBox(k); });
+  renderPicker();
+}
+function renderPicker(){
+  var el = $('recBanner');
+  var opts = '<option value="">Choose your school</option>' + state.schools.map(function(s){
+    return '<option value="' + esc(s.name) + '"' + (s.name === state.pickSchool ? ' selected' : '') + '>' + esc(s.name) + '</option>';
+  }).join('');
+  var list;
+  if(!state.pickSchool){
+    list = '<p class="hint" style="margin:10px 0 0">Choose your school to see the details you saved.</p>';
+  } else if(state.loadingEntries){
+    list = '<p class="hint" style="margin:10px 0 0">Loading saved entries...</p>';
+  } else if(state.entriesErr){
+    list = '<div class="msg err" style="display:block">' + esc(state.entriesErr) + '</div>';
+  } else if(!state.entries.length){
+    list = '<div class="msg warn" style="display:block;margin-top:10px">No saved details for this school yet. Please enter them on the Home page first. <button class="btn alt" type="button" id="goHome" style="margin-left:8px;padding:6px 14px">Go to Home</button></div>';
+  } else {
+    list = state.entries.map(function(e){
+      var n = e.video + e.doc + e.photo;
+      var tag = n ? '<span class="pill up tag">Video ' + e.video + ', Docs ' + e.doc + ', Photos ' + e.photo + '</span>' : '<span class="pill part tag">No files yet</span>';
+      return '<button type="button" class="entry' + (state.sel && state.sel.id === e.id ? ' on' : '') + '" data-id="' + esc(e.id) + '">' + tag +
+        '<b>' + esc(e.title) + '</b>' +
+        '<small>' + esc(e.ppaType) + ' with ' + esc(e.stake) + (e.ppaDate ? ', ' + esc(e.ppaDate) : '') + '</small>' +
+        '<small>Entered by ' + esc(e.by) + ' on ' + esc(e.date) + '</small></button>';
+    }).join('');
+  }
+  var panel = '';
+  if(state.sel){
+    var mode = state.pkMode || state.mode;
+    panel = '<div class="msg ok" style="display:block;margin-top:14px">Uploading for: <b>' + esc(state.sel.title) + '</b> at <b>' + esc(state.sel.school) + '</b>. Record ID ' + esc(state.sel.id) + '.</div>' +
+      '<div style="margin-top:12px"><label for="upBy">Uploaded by <small>(your name, shown in Upload Status)</small></label>' +
+      '<input type="text" id="upBy" value="' + esc(state.upBy || '') + '"></div>' +
+      '<div class="sugg" style="margin-top:12px"><b>Video script for this entry</b>' +
+      '<div class="row-btns" style="margin-top:8px"><select id="pkMode" style="max-width:170px"><option value="one"' + (mode === 'one' ? ' selected' : '') + '>One host</option><option value="two"' + (mode === 'two' ? ' selected' : '') + '>Two hosts</option></select>' +
+      '<button class="btn alt" type="button" id="pkCopy" style="padding:8px 16px">Copy script</button>' +
+      '<button class="btn ghost" type="button" id="pkDl" style="padding:8px 16px">Download script</button>' +
+      '<span id="pkCopied" class="st-ok" style="display:none">Copied!</span></div></div>';
+  }
+  el.innerHTML = '<label for="pkSchool">Your school</label><select id="pkSchool">' + opts + '</select>' +
+    '<div style="font-weight:600;margin-top:14px">Tap the saved entry you want to upload files for</div>' + list + panel;
+
+  $('pkSchool').addEventListener('change', function(){
+    if(uploading){ this.value = state.pickSchool || ''; return; }
+    state.pickSchool = this.value; state.sel = null; state.recordId = '';
+    boxes.video.rows = []; boxes.docs.rows = []; boxes.photos.rows = [];
+    loadEntries();
+  });
+  var g = $('goHome'); if(g) g.addEventListener('click', function(){ showTab('home'); });
+  el.querySelectorAll('.entry').forEach(function(b){
+    b.addEventListener('click', function(){ selectEntry(b.getAttribute('data-id')); });
+  });
+  if(state.sel){
+    $('upBy').addEventListener('input', function(){ state.upBy = this.value; });
+    $('pkMode').addEventListener('change', function(){ state.pkMode = this.value; });
+    $('pkCopy').addEventListener('click', function(){ copyText(buildScript(state.sel, $('pkMode').value).plain, 'pkCopied'); });
+    $('pkDl').addEventListener('click', function(){ var m = $('pkMode').value; downloadText(scriptFile(state.sel.school, m), buildScript(state.sel, m).plain); });
+  }
+  $('boxes').style.display = state.sel ? '' : 'none';
+  $('doneCard').style.display = state.sel ? '' : 'none';
 }
 
 function renderVideoBox(host){
@@ -721,18 +864,19 @@ function renderVideoBox(host){
     '<div class="msg" id="vmsg"></div>';
   $('vlink').value = old; $('vok').checked = oldOk;
   $('vbtn').addEventListener('click', async function(){
-    var link = $('vlink').value.trim(), v = V();
-    if(!state.recordId){ showTab('home'); showMsg('saveMsg','warn','Please save the details first, then open Upload Files.'); return; }
-    if(!v.by){ showMsg('vmsg','err','Please type your name on the Home page first.'); return; }
+    var link = $('vlink').value.trim(), by = upByVal();
+    if(!state.recordId){ showMsg('vmsg','err','Please tap your saved entry above first.'); return; }
+    if(!by){ showMsg('vmsg','err','Please type your name in the Uploaded by box above.'); return; }
     if(!link){ showMsg('vmsg','err','Please paste the link to your video.'); return; }
     if(!$('vok').checked){ showMsg('vmsg','err','Please set your video to Anyone with the link (Viewer), then tick the box.'); return; }
     var btn = $('vbtn'); btn.disabled = true; btn.textContent = 'Checking the link...';
     try{
-      await gs('saveVideoLink', state.recordId, link, v.by);
+      await gs('saveVideoLink', state.recordId, link, by);
       showMsg('vmsg','ok','Video link saved. Thank you!');
       state.done.push({ type:'Video', name:'Video link submitted', time:new Date() });
       renderDone();
       $('vlink').value = ''; $('vok').checked = false;
+      loadEntries(true);
     }catch(e){
       showMsg('vmsg','err', e.message);
     }
@@ -837,7 +981,7 @@ function setProgress(r, pct){
 }
 
 async function uploadRow(key, r){
-  var b = boxes[key], v = V();
+  var b = boxes[key], by = upByVal();
   r.state = 'uploading'; r.pct = 0; renderBox(key);
   try{
     var finalName = (cleanName(r.name) || nameBase('File')) + '.' + r.ext;
@@ -856,7 +1000,7 @@ async function uploadRow(key, r){
       if(res.done) fileId = res.id;
     }
     if(!fileId) throw new Error('The upload did not finish. Please try again.');
-    await gs('finishUpload', state.recordId, b.type, fileId, v.by);
+    await gs('finishUpload', state.recordId, b.type, fileId, by);
     r.state = 'done'; r.pct = 100;
     state.done.push({ type: b.type, name: finalName, time: new Date() });
     renderDone();
@@ -868,9 +1012,8 @@ async function uploadRow(key, r){
 
 var uploading = false;
 async function uploadBox(key){
-  var v = V();
-  if(!state.recordId){ showTab('home'); showMsg('saveMsg','warn','Please save the details first, then open Upload Files.'); return; }
-  if(!v.by){ alert('Please type your name on the Home page first.'); return; }
+  if(!state.recordId){ alert('Please tap your saved entry first.'); return; }
+  if(!upByVal()){ alert('Please type your name in the Uploaded by box.'); return; }
   if(uploading) return;
   uploading = true;
   window.onbeforeunload = function(){ return 'An upload is still running.'; };
@@ -879,6 +1022,7 @@ async function uploadBox(key){
   for(var i=0;i<todo.length;i++){ await uploadRow(key, todo[i]); }
   window.onbeforeunload = null;
   uploading = false;
+  loadEntries(true);
 }
 
 function renderDone(){
@@ -957,7 +1101,7 @@ async function init(){
   loadDraft();
   setMode('one');
   ['video','docs','photos'].forEach(function(k){ renderBox(k); });
-  renderBanner();
+  renderPicker();
 }
 init();
 
