@@ -357,15 +357,36 @@ function fmtNum(n){ return Number(n||0).toLocaleString('en-PH'); }
 function fmtMoney(n){ return '₱' + Number(n||0).toLocaleString('en-PH', {minimumFractionDigits:0, maximumFractionDigits:2}); }
 function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 
+// PASTE YOUR APPS SCRIPT WEB APP LINK BETWEEN THE QUOTES (it ends with /exec).
+// Needed when this page is hosted on GitHub. Leave empty if you open the web app link itself.
+var API_URL = '';
+
 var hasGS = (typeof google !== 'undefined' && google.script && google.script.run);
 function gs(fn){
   var args = Array.prototype.slice.call(arguments, 1);
-  return new Promise(function(res, rej){
-    if(!hasGS){ rej(new Error('This page must be opened from the web app link.')); return; }
-    var r = google.script.run
-      .withSuccessHandler(res)
-      .withFailureHandler(function(e){ rej(new Error(e && e.message ? e.message : String(e))); });
-    r[fn].apply(r, args);
+  if(hasGS){
+    return new Promise(function(res, rej){
+      var r = google.script.run
+        .withSuccessHandler(res)
+        .withFailureHandler(function(e){ rej(new Error(e && e.message ? e.message : String(e))); });
+      r[fn].apply(r, args);
+    });
+  }
+  if(!API_URL){
+    return Promise.reject(new Error('The web app link is not set yet. Open index.html, paste your Apps Script web app link into API_URL, and upload it again.'));
+  }
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify({fn: fn, args: args})
+  }).then(function(r){
+    if(!r.ok) throw new Error('Could not reach the server (' + r.status + ').');
+    return r.json();
+  }).then(function(j){
+    if(!j.ok) throw new Error(j.error || 'Something went wrong.');
+    return j.data;
+  }, function(){
+    throw new Error('Could not reach the server. Check your internet signal, and that the web app is deployed with access set to Anyone.');
   });
 }
 
@@ -448,7 +469,15 @@ function populateSchools(){
 function toggleOther(){
   $('schoolOther').style.display = $('school').value === '__other' ? 'block' : 'none';
 }
-$('school').addEventListener('change', function(){ toggleOther(); onChange(); });
+$('school').addEventListener('change', function(){
+  toggleOther();
+  var hit = state.schools.filter(function(s){ return s.name === $('school').value; })[0];
+  if(hit && hit.head){
+    if(!$('by').value.trim()) $('by').value = hit.head;
+    if(!$('pos').value.trim()) $('pos').value = 'School Head';
+  }
+  onChange();
+});
 
 /* ---------- Clock ---------- */
 function tick(){
@@ -901,9 +930,9 @@ function renderStatus(){
   var list = st.schools.filter(function(s){
     return (state.filter === 'all' || s.status === state.filter) && (!q || s.name.toLowerCase().indexOf(q) !== -1);
   });
-  $('schoolTbl').innerHTML = '<thead><tr><th>School</th><th>District</th><th>Status</th><th>PPAs</th><th>Video</th><th>Documents</th><th>Photos</th><th>Last update</th><th>Last entered or uploaded by</th></tr></thead><tbody>' +
+  $('schoolTbl').innerHTML = '<thead><tr><th>School</th><th>School Head</th><th>Status</th><th>PPAs</th><th>Video</th><th>Documents</th><th>Photos</th><th>Last update</th><th>Last entered or uploaded by</th></tr></thead><tbody>' +
     (list.length ? list.map(function(s){
-      return '<tr><td><b>' + esc(s.name) + '</b></td><td>' + esc(s.district) + '</td><td>' + pill(s.status) + '</td><td>' + s.ppas + '</td><td>' + mark(s.video) + '</td><td>' + mark(s.doc) + '</td><td>' + mark(s.photo) + '</td><td>' + esc(s.last || '') + '</td><td>' + esc(s.lastBy || '') + '</td></tr>';
+      return '<tr><td><b>' + esc(s.name) + '</b></td><td>' + esc(s.head || '') + '</td><td>' + pill(s.status) + '</td><td>' + s.ppas + '</td><td>' + mark(s.video) + '</td><td>' + mark(s.doc) + '</td><td>' + mark(s.photo) + '</td><td>' + esc(s.last || '') + '</td><td>' + esc(s.lastBy || '') + '</td></tr>';
     }).join('') : '<tr><td colspan="9">No schools to show.</td></tr>') + '</tbody>';
 
   $('recentTbl').innerHTML = '<thead><tr><th>Date inputted</th><th>School</th><th>PPA</th><th>Stakeholders</th><th>Learners</th><th>Amount</th><th>Date of PPA</th><th>Entered by</th><th>Files</th></tr></thead><tbody>' +
@@ -920,12 +949,10 @@ FIELDS.forEach(function(f){
 });
 
 async function init(){
-  if(hasGS){
-    try{
-      var r = await gs('getInit');
-      state.schools = r.schools || []; state.limits = r.limits || state.limits; state.allowed = r.allowed || state.allowed;
-    }catch(e){ showMsg('saveMsg','err', e.message); }
-  }
+  try{
+    var r = await gs('getInit');
+    state.schools = r.schools || []; state.limits = r.limits || state.limits; state.allowed = r.allowed || state.allowed;
+  }catch(e){ showMsg('saveMsg','err', e.message); }
   populateSchools();
   loadDraft();
   setMode('one');
