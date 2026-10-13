@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stakeholder Contributions Portal</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<meta name="theme-color" content="#14673a">
+<style>
+:root{
+  --green:#14673a; --green2:#1f8a4c; --green3:#e6f4ea;
+  --yellow:#f6c21c; --yellow2:#fff6d6; --ink:#1d2a22; --muted:#5b6b61;
+  --line:#dfe7e1; --bg:#f6f8f4; --red:#b3261e; --card:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;font-size:16px}
+header.top{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.top-in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;cursor:pointer;background:none;border:0;padding:0;text-align:left;font:inherit}
+.brand:focus-visible{outline:3px solid var(--yellow);outline-offset:3px;border-radius:10px}
+.logo{width:52px;height:52px;flex:none;transition:transform .2s}
+.brand:hover .logo{transform:scale(1.08) rotate(-4deg)}
+.brand-title{font-weight:800;font-size:1.15rem;line-height:1.2}
+.brand-sub{font-size:.8rem;opacity:.92}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap}
+nav.tabs button{background:rgba(255,255,255,.14);color:#fff;border:0;padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+nav.tabs button:hover{background:rgba(255,255,255,.28)}
+nav.tabs button.on{background:var(--yellow);color:#4a3a00}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+section.page{display:none}
+section.page.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card h2{margin:0 0 4px;font-size:1.2rem;color:var(--green)}
+.card .hint{color:var(--muted);font-size:.92rem;margin:0 0 14px}
+.hero{background:linear-gradient(135deg,var(--yellow2),#fff);border-color:#f0dd92}
+.hero h1{margin:0 0 6px;font-size:1.5rem;color:var(--green)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:14px}
+.step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;font-size:.93rem}
+.step b.n{background:var(--green);color:#fff;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none;font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.full{grid-column:1/-1}
+label{display:block;font-weight:600;font-size:.9rem;margin-bottom:4px}
+label small{font-weight:400;color:var(--muted)}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:10px 12px;border:1.5px solid #cdd8d0;border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:3px solid #cfe9d7;border-color:var(--green2)}
+textarea{min-height:84px;resize:vertical}
+.req{color:var(--red)}
+.btn{background:var(--green);color:#fff;border:0;padding:11px 20px;border-radius:12px;font:inherit;font-weight:700;cursor:pointer}
+.btn:hover{background:#0f5330}
+.btn.alt{background:var(--yellow);color:#4a3a00}
+.btn.alt:hover{background:#e3b10f}
+.btn.ghost{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.row-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:.95rem;display:none}
+.msg.ok{display:block;background:var(--green3);border:1px solid #b7dcc3;color:#0f4d2a}
+.msg.err{display:block;background:#fdecea;border:1px solid #f3b8b3;color:#8a1c14}
+.msg.warn{display:block;background:var(--yellow2);border:1px solid #f0dd92;color:#5a4600}
+.clock{background:var(--green3);border-radius:10px;padding:10px 12px;font-size:.92rem}
+.seg{display:inline-flex;border:1.5px solid var(--green);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.seg button{background:#fff;color:var(--green);border:0;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer}
+.seg button.on{background:var(--green);color:#fff}
+.script{background:#fffdf3;border:1px dashed #e2c64a;border-radius:12px;padding:14px}
+.ln{margin:0 0 12px}
+.who{display:inline-block;background:var(--green);color:#fff;border-radius:6px;font-size:.72rem;font-weight:800;padding:2px 8px;margin-right:6px;letter-spacing:.03em}
+.who.h2{background:#a97a00}
+.who.cue{background:#6b7a70}
+.ln.cue{color:var(--muted);font-style:italic}
+mark{background:#d9f2e0;color:#0f4d2a;border-radius:4px;padding:0 3px}
+mark.ph{background:#ffe9a8;color:#6b4e00}
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.tips ul{margin:6px 0 0;padding-left:20px}
+.tips li{margin-bottom:4px}
+.boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px}
+.ubox{display:flex;flex-direction:column;margin:0}
+.ubox .ic{font-size:1.8rem}
+.ubox h3{margin:0;color:var(--green);font-size:1.1rem}
+.badge{display:inline-block;background:var(--yellow2);border:1px solid #f0dd92;color:#6b4e00;border-radius:999px;font-size:.72rem;font-weight:700;padding:1px 9px;margin-left:6px}
+.sugg{background:var(--green3);border-radius:10px;padding:10px 12px;font-size:.9rem;margin:10px 0}
+.sugg ul{margin:4px 0 0;padding-left:18px}
+.fname{background:#fff;border:1.5px dashed var(--green2);border-radius:10px;padding:8px 10px;font-family:Consolas,monospace;font-size:.85rem;word-break:break-all;margin:6px 0 10px}
+.drop{border:2px dashed #b9c9bd;border-radius:12px;padding:16px;text-align:center;background:#fafcfa;cursor:pointer}
+.drop:hover{border-color:var(--green2);background:var(--green3)}
+.drop input{display:none}
+.frow{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px;background:#fff}
+.frow .top2{display:flex;gap:8px;align-items:center}
+.frow input[type=text]{font-family:Consolas,monospace;font-size:.85rem;padding:7px 9px}
+.ext{font-family:Consolas,monospace;font-size:.85rem;color:var(--muted);white-space:nowrap}
+.xbtn{background:none;border:0;color:var(--red);font-size:1.2rem;cursor:pointer;padding:2px 6px}
+.meta{font-size:.8rem;color:var(--muted);margin-top:4px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.bar{height:8px;background:#e8eee9;border-radius:99px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--green2);transition:width .2s}
+.st-ok{color:var(--green);font-weight:700}
+.st-err{color:var(--red);font-weight:700}
+.cards4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:1.6rem;color:var(--green)}
+.stat span{font-size:.82rem;color:var(--muted)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.chip{border:1.5px solid var(--green);background:#fff;color:var(--green);border-radius:999px;padding:6px 14px;font:inherit;font-weight:600;cursor:pointer;font-size:.9rem}
+.chip.on{background:var(--green);color:#fff}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.9rem}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--green);color:#fff;font-weight:700;white-space:nowrap;position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+.pill{border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:700;white-space:nowrap;display:inline-block}
+.pill.up{background:var(--green3);color:#0f4d2a}
+.pill.no{background:#fdecea;color:#8a1c14}
+.pill.part{background:var(--yellow2);color:#6b4e00}
+.yes{color:var(--green);font-weight:800}
+.nope{color:#b9c2bc}
+footer{text-align:center;color:var(--muted);font-size:.85rem;padding:20px}
+@media (max-width:560px){.brand-title{font-size:1rem}.logo{width:44px;height:44px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <button class="brand" id="brandBtn" type="button" aria-label="Go to the Home page" title="Go to Home">
+      <svg class="logo" viewBox="0 0 64 64" role="img" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="#0f5330"/>
+        <circle cx="32" cy="32" r="30" fill="none" stroke="#f6c21c" stroke-width="3"/>
+        <path d="M11 30 L32 12 L53 30 Z" fill="#ffffff"/>
+        <rect x="16" y="30" width="32" height="19" fill="#ffffff"/>
+        <rect x="28" y="38" width="8" height="11" fill="#14673a"/>
+        <path d="M32 27.5 C25.5 23.5 26.5 18 30 18 C31.4 18 32 19 32 19.8 C32 19 32.6 18 34 18 C37.5 18 38.5 23.5 32 27.5 Z" fill="#e4572e"/>
+        <circle cx="48" cy="47" r="10" fill="#f6c21c" stroke="#ffffff" stroke-width="2"/>
+        <path d="M48 52 V42 M43.5 46.5 L48 42 L52.5 46.5" stroke="#14673a" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>
+        <span class="brand-title" style="display:block">Stakeholder Contributions Portal</span>
+        <span class="brand-sub" style="display:block">Share, tell, and upload the support your school received</span>
+      </span>
+    </button>
+    <nav class="tabs" aria-label="Main">
+      <button type="button" data-tab="home" class="on">Home</button>
+      <button type="button" data-tab="upload">Upload Files</button>
+      <button type="button" data-tab="status">Upload Status</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= HOME ================= -->
+<section class="page on" id="page-home">
+
+  <div class="card hero">
+    <h1>Show who helped your school</h1>
+    <p style="margin:0">Use this page to record the programs, projects, and activities (PPAs) supported by your stakeholders. Fill in the details, use the script to make a short thank you video, keep the video in your own Google Drive and share its link, then upload your documents or photos. You may send only one kind of file if that is all you have.</p>
+    <div class="steps">
+      <div class="step"><b class="n">1</b><span>Write the PPA details below</span></div>
+      <div class="step"><b class="n">2</b><span>Read the suggested script and record your video</span></div>
+      <div class="step"><b class="n">3</b><span>Open <b>Upload Files</b>, paste your video link, and attach documents or photos</span></div>
+      <div class="step"><b class="n">4</b><span>Check <b>Upload Status</b> to see who has uploaded</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Step 1. Details of the program, project, or activity</h2>
+    <p class="hint">Fields marked with <span class="req">*</span> are needed. These details also fill in the script below.</p>
+    <div class="grid">
+      <div>
+        <label for="school">School <span class="req">*</span></label>
+        <select id="school"></select>
+        <input type="text" id="schoolOther" placeholder="Type your school name" style="display:none;margin-top:8px">
+      </div>
+      <div>
+        <label for="by">Your name (who is entering this) <span class="req">*</span></label>
+        <input type="text" id="by" placeholder="Example: Juan Dela Cruz">
+      </div>
+      <div>
+        <label for="pos">Your position</label>
+        <input type="text" id="pos" placeholder="Example: School Head">
+      </div>
+      <div>
+        <label for="contact">Contact number or email <small>(optional, not shown to the public)</small></label>
+        <input type="text" id="contact">
+      </div>
+
+      <div>
+        <label for="ppaType">This is a</label>
+        <select id="ppaType">
+          <option>Program</option>
+          <option selected>Project</option>
+          <option>Activity</option>
+        </select>
+      </div>
+      <div>
+        <label for="title">Name of the program, project, or activity <span class="req">*</span></label>
+        <input type="text" id="title" placeholder="Example: Brigada Eskwela Painting Project">
+      </div>
+      <div class="full">
+        <label for="desc">What happened and why? <small>(one or two sentences)</small></label>
+        <textarea id="desc" placeholder="Example: Volunteers repainted our classrooms and repaired chairs so learners can study in a clean and safe room."></textarea>
+      </div>
+
+      <div>
+        <label for="stake">Stakeholder or stakeholders <span class="req">*</span></label>
+        <input type="text" id="stake" placeholder="Example: Barangay Council and Mr. Santos">
+      </div>
+      <div>
+        <label for="stakeType">Kind of stakeholder</label>
+        <select id="stakeType">
+          <option>Parent or PTA</option>
+          <option>Barangay or LGU</option>
+          <option>Business or company</option>
+          <option>Alumni</option>
+          <option>NGO or civic group</option>
+          <option>Government agency</option>
+          <option>Church or religious group</option>
+          <option>Individual donor</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label for="contrib">Kind of help given</label>
+        <select id="contrib">
+          <option value="cash support">Cash</option>
+          <option value="in kind support" selected>In kind (materials, goods, equipment)</option>
+          <option value="time and service">Service or volunteer work</option>
+          <option value="cash and in kind support">Cash and in kind</option>
+        </select>
+      </div>
+      <div>
+        <label for="learners">How many learners enjoyed it?</label>
+        <input type="number" id="learners" min="0" inputmode="numeric" placeholder="Example: 85">
+      </div>
+      <div>
+        <label for="amount">Amount spent or donated (₱) <small>(or estimated value)</small></label>
+        <input type="number" id="amount" min="0" step="0.01" inputmode="decimal" placeholder="Example: 15000">
+      </div>
+      <div>
+        <label for="ppaDate">Date of the PPA</label>
+        <input type="date" id="ppaDate">
+      </div>
+      <div class="full">
+        <div class="clock">Date and time inputted: <b id="clock"></b>. The date and time, and your name, are saved automatically when you press Save.</div>
+      </div>
+    </div>
+    <div class="row-btns">
+      <button class="btn" id="saveBtn" type="button">Save Details</button>
+      <button class="btn ghost" id="newBtn" type="button">Start a New Entry</button>
+    </div>
+    <div class="msg" id="saveMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2. Suggested script for your video</h2>
+    <p class="hint">This is a generic script. Your details above fill it in automatically. Green words came from your form. Yellow words in brackets still need your answer. Feel free to change the words to sound like you.</p>
+
+    <div class="seg" role="tablist" aria-label="Number of hosts">
+      <button type="button" id="mOne" class="on">One host</button>
+      <button type="button" id="mTwo">Two hosts</button>
+    </div>
+
+    <div class="grid" style="margin-bottom:12px">
+      <div id="h1wrap">
+        <label for="host1">Host name <small>(if different from your name above)</small></label>
+        <input type="text" id="host1" placeholder="Host name">
+      </div>
+      <div id="h2wrap" style="display:none">
+        <label for="host2">Second host name</label>
+        <input type="text" id="host2" placeholder="Second host name">
+      </div>
+    </div>
+
+    <div class="script" id="scriptBox"></div>
+    <div class="row-btns">
+      <button class="btn alt" id="copyBtn" type="button">Copy the script</button>
+      <span id="copyMsg" class="st-ok" style="display:none">Copied!</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Tips for the video maker</h2>
+    <div class="tips">
+      <div>
+        <b>Shots to take</b>
+        <ul>
+          <li>Opening: the host in front of the school gate or signboard</li>
+          <li>Short thank you message from the stakeholder, with their permission</li>
+          <li>The activity, the gifts or repairs, and the finished work</li>
+          <li>Learners saying "Thank you!" together</li>
+          <li>Closing: the host with learners and stakeholders</li>
+        </ul>
+      </div>
+      <div>
+        <b>Good video habits</b>
+        <ul>
+          <li>Hold the phone sideways (landscape)</li>
+          <li>Keep it between 1 and 3 minutes</li>
+          <li>Record in a bright and quiet place</li>
+          <li>Speak slowly and smile</li>
+          <li>Follow your school's child protection and media consent rules for learners</li>
+        </ul>
+      </div>
+    </div>
+    <div class="row-btns"><button class="btn" type="button" id="toUpload">Go to Upload Files</button></div>
+  </div>
+</section>
+
+<!-- ================= UPLOAD ================= -->
+<section class="page" id="page-upload">
+  <div class="card">
+    <h2>Upload Files</h2>
+    <p class="hint">You do not need to send all three. Share only what you have. Videos stay in your own Google Drive and you paste the link. Documents and photos are uploaded here. Please keep this page open until an upload is finished.</p>
+    <div id="recBanner"></div>
+  </div>
+  <div class="boxes" id="boxes"></div>
+  <div class="card" style="margin-top:18px">
+    <h2>Uploaded in this visit</h2>
+    <div id="doneList" class="hint">Nothing uploaded yet.</div>
+  </div>
+</section>
+
+<!-- ================= STATUS ================= -->
+<section class="page" id="page-status">
+  <div class="card">
+    <h2>Upload Status</h2>
+    <p class="hint">Anyone with this link can see which schools uploaded and who uploaded them.</p>
+    <div class="row-btns" style="margin:0 0 12px"><button class="btn ghost" id="refreshBtn" type="button">Refresh</button></div>
+    <div class="cards4" id="stats"></div>
+    <h3 style="color:var(--green);margin:6px 0">Schools</h3>
+    <div class="tools">
+      <button class="chip on" data-f="all" type="button">All</button>
+      <button class="chip" data-f="Uploaded" type="button">Uploaded</button>
+      <button class="chip" data-f="Details only" type="button">Details only</button>
+      <button class="chip" data-f="Not yet" type="button">Not yet</button>
+      <input type="text" id="q" placeholder="Search school" style="max-width:240px">
+    </div>
+    <div class="tw"><table id="schoolTbl"></table></div>
+  </div>
+  <div class="card">
+    <h3 style="color:var(--green);margin:0 0 8px">Latest entries</h3>
+    <div class="tw"><table id="recentTbl"></table></div>
+  </div>
+</section>
+
+</main>
+<footer>Stakeholder Contributions Portal</footer>
+
+<script>
+(function(){
+'use strict';
+
+var CHUNK = 3 * 1024 * 1024; // 3 MB, a multiple of 256 KB
+var $ = function(id){ return document.getElementById(id); };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function fmtNum(n){ return Number(n||0).toLocaleString('en-PH'); }
+function fmtMoney(n){ return '₱' + Number(n||0).toLocaleString('en-PH', {minimumFractionDigits:0, maximumFractionDigits:2}); }
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+var hasGS = (typeof google !== 'undefined' && google.script && google.script.run);
+function gs(fn){
+  var args = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function(res, rej){
+    if(!hasGS){ rej(new Error('This page must be opened from the web app link.')); return; }
+    var r = google.script.run
+      .withSuccessHandler(res)
+      .withFailureHandler(function(e){ rej(new Error(e && e.message ? e.message : String(e))); });
+    r[fn].apply(r, args);
+  });
+}
+
+var state = {
+  recordId: '', schools: [], mode: 'one', filter: 'all', status: null,
+  limits: {Video:300, Document:50, Photo:25},
+  allowed: {
+    Video:['mp4','mov','m4v','avi','mkv','webm','3gp'],
+    Document:['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','csv'],
+    Photo:['jpg','jpeg','png','heic','webp','gif']
+  },
+  done: []
+};
+
+/* ---------- Tabs ---------- */
+function showTab(name){
+  ['home','upload','status'].forEach(function(t){
+    $('page-'+t).classList.toggle('on', t === name);
+  });
+  var bs = document.querySelectorAll('nav.tabs button');
+  for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tab') === name);
+  if(name === 'upload'){ renderBanner(); ['video','docs','photos'].forEach(function(k){ applyNames(k); renderBox(k); }); }
+  if(name === 'status'){ loadStatus(); }
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('nav.tabs button').forEach(function(b){
+  b.addEventListener('click', function(){ showTab(b.getAttribute('data-tab')); });
+});
+$('brandBtn').addEventListener('click', function(){ showTab('home'); });
+$('toUpload').addEventListener('click', function(){ showTab('upload'); });
+
+/* ---------- Form values ---------- */
+function V(){
+  var sel = $('school').value;
+  var school = sel === '__other' ? $('schoolOther').value.trim() : sel;
+  return {
+    school: school,
+    by: $('by').value.trim(), pos: $('pos').value.trim(), contact: $('contact').value.trim(),
+    ppaType: $('ppaType').value, title: $('title').value.trim(), desc: $('desc').value.trim(),
+    stake: $('stake').value.trim(), stakeType: $('stakeType').value, contrib: $('contrib').value,
+    learners: $('learners').value, amount: $('amount').value, ppaDate: $('ppaDate').value,
+    host1: $('host1').value.trim(), host2: $('host2').value.trim()
+  };
+}
+var FIELDS = ['by','pos','contact','ppaType','title','desc','stake','stakeType','contrib','learners','amount','ppaDate','host1','host2','schoolOther'];
+
+function saveDraft(){
+  try{
+    var d = {}; FIELDS.forEach(function(f){ d[f] = $(f).value; });
+    d.school = $('school').value; d.recordId = state.recordId;
+    localStorage.setItem('scp_draft', JSON.stringify(d));
+  }catch(e){}
+}
+function loadDraft(){
+  try{
+    var d = JSON.parse(localStorage.getItem('scp_draft') || 'null');
+    if(!d) return;
+    FIELDS.forEach(function(f){ if(d[f] != null) $(f).value = d[f]; });
+    if(d.school){
+      var ok = false;
+      for(var i=0;i<$('school').options.length;i++){ if($('school').options[i].value === d.school) ok = true; }
+      if(ok) $('school').value = d.school;
+    }
+    state.recordId = d.recordId || '';
+    toggleOther();
+  }catch(e){}
+}
+
+function populateSchools(){
+  var s = $('school'); s.innerHTML = '';
+  var o = document.createElement('option'); o.value = ''; o.textContent = 'Choose your school'; s.appendChild(o);
+  state.schools.forEach(function(x){
+    var op = document.createElement('option'); op.value = x.name; op.textContent = x.name; s.appendChild(op);
+  });
+  var other = document.createElement('option'); other.value = '__other'; other.textContent = 'My school is not on the list';
+  s.appendChild(other);
+  if(!state.schools.length){ s.value = '__other'; }
+  toggleOther();
+}
+function toggleOther(){
+  $('schoolOther').style.display = $('school').value === '__other' ? 'block' : 'none';
+}
+$('school').addEventListener('change', function(){ toggleOther(); onChange(); });
+
+/* ---------- Clock ---------- */
+function tick(){
+  var d = new Date();
+  $('clock').textContent = d.toLocaleString('en-PH', {year:'numeric', month:'long', day:'numeric', hour:'numeric', minute:'2-digit'});
+}
+tick(); setInterval(tick, 30000);
+
+/* ---------- Save details ---------- */
+function showMsg(id, cls, text){
+  var m = $(id); m.className = 'msg ' + cls; m.textContent = text;
+}
+$('saveBtn').addEventListener('click', async function(){
+  var v = V();
+  if(!v.school){ showMsg('saveMsg','err','Please choose or type your school.'); return; }
+  if(!v.by){ showMsg('saveMsg','err','Please type your name.'); return; }
+  if(!v.title){ showMsg('saveMsg','err','Please type the name of the program, project, or activity.'); return; }
+  if(!v.stake){ showMsg('saveMsg','err','Please type the name of the stakeholder or stakeholders.'); return; }
+  var btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saving...';
+  try{
+    var r = await gs('saveDetails', {
+      recordId: state.recordId, school: v.school, enteredBy: v.by, position: v.pos, contact: v.contact,
+      ppaType: v.ppaType, title: v.title, details: v.desc, stakeholders: v.stake, stakeType: v.stakeType,
+      contribType: v.contrib, learners: v.learners, amount: v.amount, ppaDate: v.ppaDate
+    });
+    state.recordId = r.recordId; saveDraft();
+    showMsg('saveMsg','ok','Saved. Record ID ' + r.recordId + '. Date and time inputted: ' + r.dateInputted + '. Entered by: ' + v.by + '. You can now open Upload Files.');
+  }catch(e){
+    showMsg('saveMsg','err', e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Save Details';
+});
+$('newBtn').addEventListener('click', function(){
+  if(!confirm('Start a new entry? The form will be cleared.')) return;
+  state.recordId = '';
+  FIELDS.forEach(function(f){ if($(f).tagName === 'SELECT') $(f).selectedIndex = ($(f).id === 'ppaType' ? 1 : ($(f).id === 'contrib' ? 1 : 0)); else $(f).value = ''; });
+  $('school').selectedIndex = 0; toggleOther();
+  state.done = [];
+  boxes.video.rows = []; boxes.docs.rows = []; boxes.photos.rows = [];
+  saveDraft(); onChange();
+  $('saveMsg').className = 'msg';
+});
+
+/* ---------- Script ---------- */
+function fmtDate(s){
+  if(!s) return '';
+  var p = s.split('-'); if(p.length !== 3) return s;
+  return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString('en-PH', {year:'numeric', month:'long', day:'numeric'});
+}
+function token(k){
+  var v = V();
+  function f(x, ph){ x = (x||'').trim(); return x ? {t:x, ok:true} : {t:'['+ph+']', ok:false}; }
+  switch(k){
+    case 'school': return f(v.school, 'Name of school');
+    case 'pos': return f(v.pos, 'your position');
+    case 'type': return {t:v.ppaType.toLowerCase(), ok:true};
+    case 'title': return f(v.title, 'Name of the program, project, or activity');
+    case 'desc': return f(v.desc, 'Tell in one or two sentences what happened and why it was done.');
+    case 'stake': return f(v.stake, 'Name of stakeholder or stakeholders');
+    case 'stakeType': return {t:v.stakeType.toLowerCase(), ok:true};
+    case 'contrib': return {t:v.contrib, ok:true};
+    case 'learners': return v.learners !== '' ? {t:fmtNum(v.learners), ok:true} : {t:'[number of learners]', ok:false};
+    case 'amount': return v.amount !== '' ? {t:fmtMoney(v.amount), ok:true} : {t:'[amount]', ok:false};
+    case 'date': return v.ppaDate ? {t:fmtDate(v.ppaDate), ok:true} : {t:'[date of the activity]', ok:false};
+    case 'h1': return f(v.host1 || v.by, 'Host name');
+    case 'h2': return f(v.host2, 'Second host name');
+  }
+  return {t:'', ok:true};
+}
+var ONE = [
+  ['', 'Good day, everyone! I am {h1}, {pos} of {school}.'],
+  ['', 'Today, we are happy to share a {type} we proudly call {title}.'],
+  ['', '{desc}'],
+  ['', 'This was made possible by {stake}, our {stakeType}. They gave us {contrib}.'],
+  ['', 'Because of their kindness, {learners} learners enjoyed and benefited from this {type}. It took place on {date}.'],
+  ['', 'The total support was worth {amount}.'],
+  ['cue', '(Show clips of the activity, the learners, and the gifts or improvements here.)'],
+  ['', 'To {stake}, thank you very much for believing in our learners. Your help makes our school a better place to learn.'],
+  ['', 'This is {h1} of {school}. Maraming salamat po!']
+];
+var TWO = [
+  ['HOST 1', 'Good day, everyone! I am {h1}, {pos} of {school}.'],
+  ['HOST 2', 'And I am {h2}. Welcome to our video about a {type} called {title}.'],
+  ['HOST 1', '{desc}'],
+  ['HOST 2', 'This was made possible by {stake}, our {stakeType}. They gave us {contrib}.'],
+  ['HOST 1', 'Because of this support, {learners} learners enjoyed and benefited. It took place on {date}.'],
+  ['HOST 2', 'The total support was worth {amount}.'],
+  ['cue', '(Show clips of the activity, the learners, and the gifts or improvements here.)'],
+  ['HOST 1', 'We want to say a big thank you to {stake}.'],
+  ['HOST 2', 'Your kindness helps our learners learn, grow, and dream.'],
+  ['BOTH', 'Maraming salamat po!']
+];
+function renderScript(){
+  var tpl = state.mode === 'one' ? ONE : TWO;
+  var html = '', plain = [];
+  tpl.forEach(function(l){
+    var who = l[0], text = l[1], p = '';
+    var out = text.replace(/\{(\w+)\}/g, function(_, k){
+      var t = token(k);
+      p += ''; return '\u0001' + (t.ok ? 'o' : 'p') + t.t + '\u0002';
+    });
+    var plainLine = out.replace(/\u0001[op]/g, '').replace(/\u0002/g, '');
+    var h = esc(out).replace(/\u0001o([^\u0002]*)\u0002/g, '<mark>$1</mark>').replace(/\u0001p([^\u0002]*)\u0002/g, '<mark class="ph">$1</mark>');
+    if(who === 'cue'){
+      html += '<p class="ln cue">' + h + '</p>';
+      plain.push(plainLine);
+    } else {
+      var cls = who === 'HOST 2' ? 'who h2' : 'who';
+      html += '<p class="ln">' + (who ? '<span class="' + cls + '">' + who + '</span>' : '') + h + '</p>';
+      plain.push((who ? who + ': ' : '') + plainLine);
+    }
+  });
+  $('scriptBox').innerHTML = html;
+  state.plainScript = plain.join('\n\n');
+}
+function setMode(m){
+  state.mode = m;
+  $('mOne').classList.toggle('on', m === 'one');
+  $('mTwo').classList.toggle('on', m === 'two');
+  $('h2wrap').style.display = m === 'two' ? 'block' : 'none';
+  renderScript();
+}
+$('mOne').addEventListener('click', function(){ setMode('one'); });
+$('mTwo').addEventListener('click', function(){ setMode('two'); });
+$('copyBtn').addEventListener('click', function(){
+  var done = function(){ var c = $('copyMsg'); c.style.display = 'inline'; setTimeout(function(){ c.style.display = 'none'; }, 2000); };
+  function fallback(){
+    var ta = document.createElement('textarea'); ta.value = state.plainScript; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(state.plainScript).then(done, fallback);
+  } else fallback();
+});
+
+/* ---------- Suggested file names ---------- */
+function schoolShort(n){
+  var s = n || 'School';
+  s = s.replace(/elementary school/ig,'ES').replace(/integrated school/ig,'IS').replace(/central school/ig,'CS')
+       .replace(/national high school/ig,'NHS').replace(/high school/ig,'HS').replace(/school/ig,'');
+  s = s.replace(/[^A-Za-z0-9 ]/g,' ').split(/\s+/).filter(Boolean).map(function(w){
+    return (w.length <= 3 && w === w.toUpperCase()) ? w : w.charAt(0).toUpperCase() + w.slice(1);
+  }).join('');
+  return (s || 'School').slice(0, 14);
+}
+function stakeShort(n){
+  var first = String(n || '').split(/,|;| and | & /i)[0];
+  var s = first.replace(/[^A-Za-z0-9 ]/g,' ').split(/\s+/).filter(Boolean).map(function(w){
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join('');
+  return (s || 'Partner').slice(0, 10);
+}
+function dateShort(d){
+  if(d) return d.replace(/-/g, '');
+  var t = new Date();
+  return t.getFullYear() + ('0'+(t.getMonth()+1)).slice(-2) + ('0'+t.getDate()).slice(-2);
+}
+function nameBase(code){
+  var v = V();
+  return [schoolShort(v.school), code, stakeShort(v.stake), dateShort(v.ppaDate)].join('_');
+}
+
+/* ---------- Upload boxes ---------- */
+var DOCKINDS = [
+  ['Report','Narrative or accomplishment report'],
+  ['Letter','Thank you letter or acknowledgment'],
+  ['Deed','Deed of donation or MOA'],
+  ['Receipt','Receipt, invoice, or item list'],
+  ['Attendance','Attendance sheet'],
+  ['Doc','Other document']
+];
+var boxes = {
+  video: {
+    type:'Video', title:'Video', icon:'🎬', multi:true,
+    accept:'video/*,.mp4,.mov,.m4v,.avi,.mkv,.webm,.3gp',
+    sugg:['One thank you video of 1 to 3 minutes','Use the script from the Home page','Highlights of the activity and a message to the stakeholder'],
+    note:'', exampleCode:'Video', rows:[]
+  },
+  docs: {
+    type:'Document', title:'Documents', icon:'📄', multi:true,
+    accept:'.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv',
+    sugg:['Narrative or accomplishment report','Thank you letter or acknowledgment receipt','Deed of donation or MOA','Official receipt, invoice, or list of items','Attendance sheet'],
+    note:'PDF, Word, Excel, or PowerPoint, up to 50 MB each', exampleCode:'Report', rows:[]
+  },
+  photos: {
+    type:'Photo', title:'Photos', icon:'📷', multi:true,
+    accept:'image/*,.jpg,.jpeg,.png,.heic,.webp',
+    sugg:['Activity in action','Turnover or signing of the donation','Group photo with the stakeholders','Photos of the items donated','Before and after photos'],
+    note:'JPG, PNG, or HEIC, up to 25 MB each. You may choose many.', exampleCode:'Photo1', rows:[]
+  }
+};
+var rowSeq = 0;
+
+function codeFor(key, rows, i){
+  var b = boxes[key];
+  if(key === 'video') return 'Video' + (rows.length > 1 ? (i+1) : '');
+  if(key === 'photos') return 'Photo' + (i+1);
+  var kind = rows[i].kind, same = 0, idx = 0;
+  for(var j=0;j<rows.length;j++){ if(rows[j].kind === kind){ same++; if(j <= i) idx = same; } }
+  return kind + (same > 1 ? idx : '');
+}
+function applyNames(key){
+  var b = boxes[key];
+  b.rows.forEach(function(r, i){
+    if(!r.custom) r.name = nameBase(codeFor(key, b.rows, i));
+  });
+}
+function cleanName(s){ return String(s).replace(/[^A-Za-z0-9_]/g, '').slice(0, 60); }
+
+function renderBanner(){
+  var v = V(), el = $('recBanner');
+  if(state.recordId){
+    el.innerHTML = '<div class="msg ok" style="display:block;margin:0">Uploading for: <b>' + esc(v.title || 'your entry') + '</b> at <b>' + esc(v.school) + '</b>. Record ID ' + esc(state.recordId) + '. Uploaded by: <b>' + esc(v.by) + '</b>.</div>';
+  } else {
+    el.innerHTML = '<div class="msg warn" style="display:block;margin:0">Please save the details on the Home page first, so your files are tied to your school and your name. <button class="btn alt" type="button" id="goHome" style="margin-left:8px;padding:6px 14px">Go to Home</button></div>';
+    var g = $('goHome'); if(g) g.addEventListener('click', function(){ showTab('home'); });
+  }
+}
+
+function renderVideoBox(host){
+  var b = boxes.video;
+  var old = $('vlink') ? $('vlink').value : '';
+  var oldOk = $('vok') ? $('vok').checked : false;
+  host.innerHTML =
+    '<div class="ic">' + b.icon + '</div>' +
+    '<h3>Video link<span class="badge">Optional</span></h3>' +
+    '<div class="sugg"><b>What to share</b><ul>' + b.sugg.map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></div>' +
+    '<div style="font-size:.85rem;color:var(--muted)">Suggested file name for your video:</div>' +
+    '<div class="fname">' + esc(nameBase('Video')) + '</div>' +
+    '<div class="msg warn" style="display:block;margin:0 0 12px"><b>Important reminder:</b> Keep the video in your own Google Drive. Before you paste the link, set it so anyone with the link can view it.' +
+    '<ol style="margin:8px 0 0;padding-left:20px">' +
+    '<li>Upload your video to your Google Drive and rename it with the suggested name.</li>' +
+    '<li>Right click the video, then choose Share.</li>' +
+    '<li>Under General access, change Restricted to <b>Anyone with the link</b>.</li>' +
+    '<li>Make sure the role is <b>Viewer</b>, then press Copy link.</li>' +
+    '<li>Paste the link below.</li></ol></div>' +
+    '<label for="vlink">Link to your video</label>' +
+    '<input type="text" id="vlink" placeholder="https://drive.google.com/file/d/...">' +
+    '<label style="font-weight:400;margin-top:10px;display:flex;gap:8px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="vok" style="width:auto;margin-top:5px"> <span>I set my video to "Anyone with the link" and the role to Viewer.</span></label>' +
+    '<div class="row-btns"><button class="btn" type="button" id="vbtn">Submit video link</button></div>' +
+    '<div class="msg" id="vmsg"></div>';
+  $('vlink').value = old; $('vok').checked = oldOk;
+  $('vbtn').addEventListener('click', async function(){
+    var link = $('vlink').value.trim(), v = V();
+    if(!state.recordId){ showTab('home'); showMsg('saveMsg','warn','Please save the details first, then open Upload Files.'); return; }
+    if(!v.by){ showMsg('vmsg','err','Please type your name on the Home page first.'); return; }
+    if(!link){ showMsg('vmsg','err','Please paste the link to your video.'); return; }
+    if(!$('vok').checked){ showMsg('vmsg','err','Please set your video to Anyone with the link (Viewer), then tick the box.'); return; }
+    var btn = $('vbtn'); btn.disabled = true; btn.textContent = 'Checking the link...';
+    try{
+      await gs('saveVideoLink', state.recordId, link, v.by);
+      showMsg('vmsg','ok','Video link saved. Thank you!');
+      state.done.push({ type:'Video', name:'Video link submitted', time:new Date() });
+      renderDone();
+      $('vlink').value = ''; $('vok').checked = false;
+    }catch(e){
+      showMsg('vmsg','err', e.message);
+    }
+    btn.disabled = false; btn.textContent = 'Submit video link';
+  });
+}
+
+function renderBox(key){
+  var b = boxes[key];
+  var host = $('box-' + key);
+  if(!host){
+    host = document.createElement('div'); host.className = 'card ubox'; host.id = 'box-' + key;
+    $('boxes').appendChild(host);
+  }
+  if(key === 'video'){ renderVideoBox(host); return; }
+  var rowsHtml = b.rows.map(function(r){
+    var kindSel = '';
+    if(key === 'docs'){
+      kindSel = '<select data-kind="' + r.id + '" style="margin-top:8px">' + DOCKINDS.map(function(k){
+        return '<option value="' + k[0] + '"' + (k[0] === r.kind ? ' selected' : '') + '>' + esc(k[1]) + '</option>';
+      }).join('') + '</select>';
+    }
+    var stateHtml = r.state === 'done' ? '<span class="st-ok">Uploaded</span>' :
+                    r.state === 'error' ? '<span class="st-err">' + esc(r.msg || 'Failed') + '</span>' :
+                    r.state === 'uploading' ? '<span id="s_' + r.id + '">Uploading... 0%</span>' : 'Ready';
+    return '<div class="frow" id="row_' + r.id + '">' +
+      '<div class="top2"><input type="text" data-name="' + r.id + '" value="' + esc(r.name) + '" maxlength="60"' + (r.state === 'ready' || r.state === 'error' ? '' : ' disabled') + '>' +
+      '<span class="ext">.' + esc(r.ext) + '</span>' +
+      (r.state === 'uploading' ? '' : '<button class="xbtn" type="button" data-rm="' + r.id + '" title="Remove">×</button>') + '</div>' +
+      kindSel +
+      '<div class="meta"><span>' + esc(r.file.name) + ' (' + (r.file.size/1048576).toFixed(1) + ' MB)</span>' + stateHtml + '</div>' +
+      '<div class="bar"><i id="p_' + r.id + '" style="width:' + (r.state === 'done' ? 100 : (r.pct||0)) + '%"></i></div>' +
+    '</div>';
+  }).join('');
+  var example = nameBase(b.exampleCode);
+  var pending = b.rows.filter(function(r){ return r.state === 'ready' || r.state === 'error'; }).length;
+  host.innerHTML =
+    '<div class="ic">' + b.icon + '</div>' +
+    '<h3>' + b.title + '<span class="badge">Optional</span></h3>' +
+    '<div class="sugg"><b>What to attach</b><ul>' + b.sugg.map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></div>' +
+    '<div style="font-size:.85rem;color:var(--muted)">Suggested file name:</div>' +
+    '<div class="fname">' + esc(example) + '</div>' +
+    '<label class="drop" for="in_' + key + '"><b>Tap to choose ' + b.title.toLowerCase() + '</b><br><small>' + esc(b.note) + '</small>' +
+    '<input type="file" id="in_' + key + '" accept="' + b.accept + '"' + (b.multi ? ' multiple' : '') + '></label>' +
+    '<div id="rows_' + key + '">' + rowsHtml + '</div>' +
+    '<div class="row-btns"><button class="btn" type="button" data-up="' + key + '"' + (pending ? '' : ' disabled') + '>Upload ' + b.title.toLowerCase() + '</button></div>';
+
+  host.querySelector('#in_' + key).addEventListener('change', function(ev){ addFiles(key, ev.target.files); ev.target.value = ''; });
+  host.querySelector('[data-up]').addEventListener('click', function(){ uploadBox(key); });
+  host.querySelectorAll('[data-rm]').forEach(function(x){
+    x.addEventListener('click', function(){
+      var id = x.getAttribute('data-rm');
+      b.rows = b.rows.filter(function(r){ return String(r.id) !== id; });
+      applyNames(key); renderBox(key);
+    });
+  });
+  host.querySelectorAll('[data-name]').forEach(function(x){
+    x.addEventListener('input', function(){
+      var r = b.rows.filter(function(q){ return String(q.id) === x.getAttribute('data-name'); })[0];
+      if(r){ r.name = cleanName(x.value); r.custom = true; }
+    });
+    x.addEventListener('blur', function(){
+      var r = b.rows.filter(function(q){ return String(q.id) === x.getAttribute('data-name'); })[0];
+      if(r){ x.value = r.name = cleanName(x.value) || nameBase('File'); }
+    });
+  });
+  host.querySelectorAll('[data-kind]').forEach(function(x){
+    x.addEventListener('change', function(){
+      var r = b.rows.filter(function(q){ return String(q.id) === x.getAttribute('data-kind'); })[0];
+      if(r){ r.kind = x.value; applyNames(key); renderBox(key); }
+    });
+  });
+}
+
+function addFiles(key, list){
+  var b = boxes[key], bad = [];
+  for(var i=0;i<list.length;i++){
+    var f = list[i];
+    var ext = (f.name.split('.').pop() || '').toLowerCase();
+    if(state.allowed[b.type].indexOf(ext) === -1){ bad.push(f.name + ' (file type not allowed)'); continue; }
+    if(f.size > state.limits[b.type] * 1048576){ bad.push(f.name + ' (more than ' + state.limits[b.type] + ' MB)'); continue; }
+    if(f.size === 0){ bad.push(f.name + ' (empty file)'); continue; }
+    b.rows.push({ id: ++rowSeq, file: f, ext: ext, name: '', custom: false, kind: 'Report', state: 'ready', pct: 0, msg: '' });
+  }
+  if(bad.length) alert('These files were not added:\n\n' + bad.join('\n'));
+  applyNames(key); renderBox(key);
+}
+
+function toB64(blob){
+  return new Promise(function(res, rej){
+    var fr = new FileReader();
+    fr.onload = function(){ res(String(fr.result).split(',')[1] || ''); };
+    fr.onerror = function(){ rej(new Error('Could not read the file.')); };
+    fr.readAsDataURL(blob);
+  });
+}
+function setProgress(r, pct){
+  r.pct = pct;
+  var p = $('p_' + r.id), s = $('s_' + r.id);
+  if(p) p.style.width = pct + '%';
+  if(s) s.textContent = 'Uploading... ' + pct + '%';
+}
+
+async function uploadRow(key, r){
+  var b = boxes[key], v = V();
+  r.state = 'uploading'; r.pct = 0; renderBox(key);
+  try{
+    var finalName = (cleanName(r.name) || nameBase('File')) + '.' + r.ext;
+    var start = await gs('startUpload', state.recordId, b.type, finalName, r.file.type || '', r.file.size);
+    var offset = 0, fileId = null;
+    while(offset < r.file.size){
+      var end = Math.min(offset + CHUNK, r.file.size);
+      var b64 = await toB64(r.file.slice(offset, end));
+      var res, tries = 0;
+      while(true){
+        try{ res = await gs('uploadChunk', start.sessionUrl, b64, offset, r.file.size); break; }
+        catch(e){ tries++; if(tries >= 3) throw e; await sleep(1500 * tries); }
+      }
+      offset = end;
+      setProgress(r, Math.round(offset / r.file.size * 100));
+      if(res.done) fileId = res.id;
+    }
+    if(!fileId) throw new Error('The upload did not finish. Please try again.');
+    await gs('finishUpload', state.recordId, b.type, fileId, v.by);
+    r.state = 'done'; r.pct = 100;
+    state.done.push({ type: b.type, name: finalName, time: new Date() });
+    renderDone();
+  }catch(e){
+    r.state = 'error'; r.msg = e.message || 'Failed. Try again.';
+  }
+  renderBox(key);
+}
+
+var uploading = false;
+async function uploadBox(key){
+  var v = V();
+  if(!state.recordId){ showTab('home'); showMsg('saveMsg','warn','Please save the details first, then open Upload Files.'); return; }
+  if(!v.by){ alert('Please type your name on the Home page first.'); return; }
+  if(uploading) return;
+  uploading = true;
+  window.onbeforeunload = function(){ return 'An upload is still running.'; };
+  var b = boxes[key];
+  var todo = b.rows.filter(function(r){ return r.state === 'ready' || r.state === 'error'; });
+  for(var i=0;i<todo.length;i++){ await uploadRow(key, todo[i]); }
+  window.onbeforeunload = null;
+  uploading = false;
+}
+
+function renderDone(){
+  var el = $('doneList');
+  if(!state.done.length){ el.textContent = 'Nothing uploaded yet.'; return; }
+  el.className = '';
+  el.innerHTML = '<ul style="margin:0;padding-left:20px">' + state.done.map(function(d){
+    return '<li><b class="st-ok">Done</b> ' + esc(d.type) + ': ' + esc(d.name) + '</li>';
+  }).join('') + '</ul><p class="hint" style="margin-top:10px">Thank you! You can see the summary in the Upload Status tab.</p>';
+}
+
+/* ---------- Status ---------- */
+async function loadStatus(){
+  $('stats').innerHTML = '<div class="hint">Loading...</div>';
+  try{
+    state.status = await gs('getStatus');
+    renderStatus();
+  }catch(e){
+    $('stats').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>';
+  }
+}
+$('refreshBtn').addEventListener('click', loadStatus);
+document.querySelectorAll('.chip').forEach(function(c){
+  c.addEventListener('click', function(){
+    state.filter = c.getAttribute('data-f');
+    document.querySelectorAll('.chip').forEach(function(x){ x.classList.toggle('on', x === c); });
+    renderStatus();
+  });
+});
+$('q').addEventListener('input', renderStatus);
+
+function mark(n){ return n > 0 ? '<span class="yes">Yes (' + n + ')</span>' : '<span class="nope">No</span>'; }
+function pill(s){
+  var c = s === 'Uploaded' ? 'up' : (s === 'Not yet' ? 'no' : 'part');
+  return '<span class="pill ' + c + '">' + esc(s) + '</span>';
+}
+function renderStatus(){
+  var st = state.status; if(!st) return;
+  var t = st.totals;
+  $('stats').innerHTML =
+    '<div class="stat"><b>' + fmtNum(t.schools) + '</b><span>Schools listed</span></div>' +
+    '<div class="stat"><b>' + fmtNum(t.uploaded) + '</b><span>Uploaded files</span></div>' +
+    '<div class="stat"><b>' + fmtNum(t.detailsOnly) + '</b><span>Details only</span></div>' +
+    '<div class="stat"><b>' + fmtNum(t.notYet) + '</b><span>Not yet</span></div>' +
+    '<div class="stat"><b>' + fmtNum(t.learners) + '</b><span>Learners reached</span></div>' +
+    '<div class="stat"><b>' + fmtMoney(t.amount) + '</b><span>Total support</span></div>';
+
+  var q = $('q').value.trim().toLowerCase();
+  var list = st.schools.filter(function(s){
+    return (state.filter === 'all' || s.status === state.filter) && (!q || s.name.toLowerCase().indexOf(q) !== -1);
+  });
+  $('schoolTbl').innerHTML = '<thead><tr><th>School</th><th>District</th><th>Status</th><th>PPAs</th><th>Video</th><th>Documents</th><th>Photos</th><th>Last update</th><th>Last entered or uploaded by</th></tr></thead><tbody>' +
+    (list.length ? list.map(function(s){
+      return '<tr><td><b>' + esc(s.name) + '</b></td><td>' + esc(s.district) + '</td><td>' + pill(s.status) + '</td><td>' + s.ppas + '</td><td>' + mark(s.video) + '</td><td>' + mark(s.doc) + '</td><td>' + mark(s.photo) + '</td><td>' + esc(s.last || '') + '</td><td>' + esc(s.lastBy || '') + '</td></tr>';
+    }).join('') : '<tr><td colspan="9">No schools to show.</td></tr>') + '</tbody>';
+
+  $('recentTbl').innerHTML = '<thead><tr><th>Date inputted</th><th>School</th><th>PPA</th><th>Stakeholders</th><th>Learners</th><th>Amount</th><th>Date of PPA</th><th>Entered by</th><th>Files</th></tr></thead><tbody>' +
+    (st.recent.length ? st.recent.map(function(r){
+      return '<tr><td>' + esc(r.date) + '</td><td>' + esc(r.school) + '</td><td>' + esc(r.type) + ': ' + esc(r.title) + '</td><td>' + esc(r.stake) + '</td><td>' + fmtNum(r.learners) + '</td><td>' + fmtMoney(r.amount) + '</td><td>' + esc(r.ppaDate) + '</td><td>' + esc(r.by) + (r.position ? '<br><small>' + esc(r.position) + '</small>' : '') + '</td><td>V ' + r.video + ', D ' + r.doc + ', P ' + r.photo + '</td></tr>';
+    }).join('') : '<tr><td colspan="9">No entries yet.</td></tr>') + '</tbody>';
+}
+
+/* ---------- Wire up ---------- */
+function onChange(){ renderScript(); saveDraft(); }
+FIELDS.forEach(function(f){
+  $(f).addEventListener('input', onChange);
+  $(f).addEventListener('change', onChange);
+});
+
+async function init(){
+  if(hasGS){
+    try{
+      var r = await gs('getInit');
+      state.schools = r.schools || []; state.limits = r.limits || state.limits; state.allowed = r.allowed || state.allowed;
+    }catch(e){ showMsg('saveMsg','err', e.message); }
+  }
+  populateSchools();
+  loadDraft();
+  setMode('one');
+  ['video','docs','photos'].forEach(function(k){ renderBox(k); });
+  renderBanner();
+}
+init();
+
+})();
+</script>
+</body>
+</html>
